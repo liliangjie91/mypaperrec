@@ -25,9 +25,10 @@ def getchilddic(dicin,keys):
     '''
     res = {}
     cnt = 0
+    print("getting child dic...")
     for u in keys:
         cnt += 1
-        if cnt % 10000 == 0:
+        if cnt % (len(keys)/10) == 0:
             print(cnt)
         res[u] = dicin[u]
     return res
@@ -47,8 +48,14 @@ def get_intersec_log_child():
     util.savejson(datapath + r'/ufn_d_typeinter_09.json', interlog)
 
 def getdifference(logb,logd):
+    print("getting diff of two dicts...")
     logdb={}
+    cnt=0
+    alllen=len(logb.keys())
     for i in logb.keys():
+        cnt+=1
+        if cnt%(alllen/10)==0:
+            print cnt
         diff = list(set(logb[i]).difference(set(logd[i])))
         if diff:
             logdb[i]=diff
@@ -57,6 +64,7 @@ def getdifference(logb,logd):
     return logdb
 
 def get_intersec_log(user_interseclist, alllog_b, alllog_d,prefix):
+    print("loading data...")
     uinterl=util.load2list(user_interseclist)
     blog=util.load2dic(alllog_b, '\t', interval=5000000)
     dlog=util.loadjson(alllog_d)
@@ -70,15 +78,16 @@ def get_intersec_log(user_interseclist, alllog_b, alllog_d,prefix):
         print("file %s is wrong!!!" % user_interseclist)
         return
     interseced_d = getchilddic(dlog,uinterl)
-    interseced_b = getchilddic(blog,uinterl)
     del dlog
+    interseced_b = getchilddic(blog,uinterl)
     del blog
     interseced_dbdiff = getdifference(interseced_b,interseced_d)
-    util.savejson("%s/%s_d.json",interseced_d)
-    util.savejson("%s/%s_b.json", interseced_b)
-    util.savejson("%s/%s_dbdiff.json", interseced_dbdiff)
+    util.savejson("%s/%s_d.json" %(datapath,prefix),interseced_d)
+    util.savejson("%s/%s_b.json" %(datapath,prefix), interseced_b)
+    util.savejson("%s/%s_dbdiff.json" %(datapath,prefix), interseced_dbdiff)
 
 
 if __name__ == '__main__':
     # get_intersec_childlog()
-    getdifference()
+    #a=util.loadjson(alllog_d18)
+    get_intersec_log(user_typeinter_18,alllog_b18,alllog_d18,"ulog_typeinter18")

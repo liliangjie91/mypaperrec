@@ -90,6 +90,7 @@ def load2list(path,to1column=False,separator=None,get1column=-1,interval=100000)
     return res
 
 def savejson(path,j):
+
     with codecs.open(path,"w",encoding=bianma) as f:
         json.dump(j,f)
 
@@ -102,7 +103,7 @@ def loadjson(path):
     :rtype:dict 
     '''
     res={}
-    with codecs.open(path, "rU", encoding=bianma) as f:
+    with codecs.open(path, "rU") as f:
         res=json.load(f)
     return res
 
