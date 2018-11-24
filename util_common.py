@@ -3,7 +3,7 @@
 # Created by liliangjie on 2018/11/10 
 # Email llj : laiangnaduo91@gmail.com
 import codecs
-import os,sys
+import os,sys,json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -58,18 +58,28 @@ def list2txt(l,path):
         for i in l:
             f.write(i.encode('utf-8', 'ignore')+'\n')
 
-def load2list(path,to1column=False,separator=None,get1column=-1):
+def load2list(path,to1column=False,separator=None,get1column=-1,interval=100000):
     '''
-    
+    读取文本返回成list，默认一行一元素，也可按分隔符分割后每部分为一元素，也可单独获取分割后的某列元素为一元素
     :param path: 
+    :type path: str
+    :param to1column: 
+    :type to1column:bool 
     :param separator: 
+    :type separator: bool
+    :param get1column: 
+    :type get1column: 
     :return: 
-    :rtype:list
+    :rtype: list
     '''
     res=[]
+    cnt=0
     if os.path.isfile(path):
         with codecs.open(path,'rU',encoding=bianma,errors='replace') as f:
             for l in f:
+                if cnt%interval==0:
+                    print("processing line : %06d" %cnt)
+                cnt+=1
                 if l.strip():
                     if to1column :
                         res.extend(l.split(separator))
@@ -79,18 +89,61 @@ def load2list(path,to1column=False,separator=None,get1column=-1):
                         res.append(l.strip())
     return res
 
-def load2dic(path,separator=None):
+def savejson(path,j):
+    with codecs.open(path,"w",encoding=bianma) as f:
+        json.dump(j,f)
+
+def loadjson(path):
     '''
     
+    :param path: 
+    :type path: 
+    :return: 
+    :rtype:dict 
+    '''
+    res={}
+    with codecs.open(path, "rU", encoding=bianma) as f:
+        res=json.load(f)
+    return res
+
+
+def load2dic(path, separator=None,interval=100000):
+    '''
+    把文件加载成字典。其中，文件每行第一个元素是key，后续元素组成列表做value
+    :param path: 
+    :param separator: 
+    :return: 
+    :rtype: dict
+    '''
+    res = {}
+    cnt=0
+    if os.path.isfile(path):
+        with codecs.open(path, 'rU', encoding=bianma, errors='replace') as f:
+            for l in f:
+                if cnt%interval==0:
+                    print("processing line : %06d" %cnt)
+                cnt+=1
+                ll = l.strip().split(separator)
+                if len(ll)>1:
+                    res[ll[0]]=ll[1:]
+    return res
+
+def load2dic_wc(path,separator=None,interval=100000):
+    '''
+    把文件加载成字典，文件每行每个元素是key，词频是value
     :param path: 
     :param separator: 
     :return: 
     :rtype: dict
     '''
     res={}
+    cnt=0
     if os.path.isfile(path):
         with codecs.open(path, 'rU', encoding=bianma, errors='replace') as f:
             for l in f:
+                if cnt%interval==0:
+                    print("processing line : %06d" %cnt)
+                cnt+=1
                 ll=l.strip().split(separator)
                 for i in ll:
                     res[i]=res.get(i,0)+1
