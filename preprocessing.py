@@ -67,12 +67,12 @@ def get_intersec_log(user_interseclist, alllog_b, alllog_d,prefix):
     del blog
     interseced_dbdiff = get_dic_diff(interseced_b, interseced_d)
     logger.info("saving ress...")
-    util.savejson("%s/%s_d.json",interseced_d)
-    util.savejson("%s/%s_b.json", interseced_b)
-    util.savejson("%s/%s_dbdiff.json", interseced_dbdiff)
+    util.savejson("%s/%s_d.json" %(datapath,prefix),interseced_d)
+    util.savejson("%s/%s_b.json" %(datapath,prefix), interseced_b)
+    util.savejson("%s/%s_dbdiff.json" %(datapath,prefix), interseced_dbdiff)
     logger.info("done!")
 
 
 if __name__ == '__main__':
     # get_intersec_childlog()
-    get_intersec_log(user_typeinter_18,alllog_b18,alllog_d18,"ulog_typeinter18")
+    get_intersec_log(user_typeinter_09,alllog_b09,alllog_d09,"ulog_typeinter09")
