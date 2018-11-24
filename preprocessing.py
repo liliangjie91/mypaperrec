@@ -19,6 +19,13 @@ user_typeinter_18 = datapath+r'/userdb_intersec_18.txt'
 user_typeinter_09 = datapath+r'/userdb_intersec_09.txt'
 user_timeinter_b = datapath+r'/userb_intersec_0918.txt'
 user_timeinter_d = datapath+r'/userd_intersec_0918.txt'
+ulog_typeinter09_d = datapath + r'/ulog_typeinter09_d.json'
+ulog_typeinter09_b = datapath + r'/ulog_typeinter09_b.json'
+ulog_typeinter09_dbdiff = datapath + r'/ulog_typeinter09_dbdiff.json'
+ulog_typeinter18_d = datapath + r'/ulog_typeinter18_d.json'
+ulog_typeinter18_b = datapath + r'/ulog_typeinter18_b.json'
+ulog_typeinter18_dbdiff = datapath + r'/ulog_typeinter18_dbdiff.json'
+
 
 def get_sub_dic(dicin, keys):
     '''
@@ -72,7 +79,36 @@ def get_intersec_log(user_interseclist, alllog_b, alllog_d,prefix):
     util.savejson("%s/%s_dbdiff.json" %(datapath,prefix), interseced_dbdiff)
     logger.info("done!")
 
+def gen_samples(ulog_d, ulog_diff, prefix):
+    logger.info("generate posi & neg samples for myrec...")
+    dlog=util.loadjson(ulog_d)
+    difflog = util.loadjson(ulog_diff)
+    posisam=[]
+    negsam=[]
+    logger.info("gen posi samples...")
+    for k in dlog.keys():
+        fns=dlog[k]
+        if fns:
+            for fn in fns:
+                posisam.append("%s+%s\t%d"%(k,fn,1))
+    print(len(posisam))
+    util.list2txt(posisam,'./data/good/'+prefix+'_posi.txt')
+    del dlog
+    del posisam
+    logger.info("gen neg samples...")
+    for k in difflog.keys():
+        fns=difflog[k]
+        if fns:
+            for fn in fns:
+                negsam.append("%s+%s\t%d"%(k,fn,0))
+    print(len(negsam))
+    util.list2txt(negsam, './data/good/' + prefix + '_neg.txt')
+
+
+
 
 if __name__ == '__main__':
     # get_intersec_childlog()
-    get_intersec_log(user_typeinter_09,alllog_b09,alllog_d09,"ulog_typeinter09")
+    # get_intersec_log(user_typeinter_09,alllog_b09,alllog_d09,"ulog_typeinter09")
+    gen_samples(ulog_typeinter18_d,ulog_typeinter18_dbdiff,"samples_18")
+    gen_samples(ulog_typeinter09_d,ulog_typeinter09_dbdiff,"samples_09")
