@@ -107,6 +107,7 @@ def gen_samples(ulog_d, ulog_diff, prefix):
 
 
 
+
 if __name__ == '__main__':
     # get_intersec_childlog()
     # get_intersec_log(user_typeinter_09,alllog_b09,alllog_d09,"ulog_typeinter09")

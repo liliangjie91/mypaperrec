@@ -69,7 +69,7 @@ def main():
     print("get totaly %d distinct words" %len(c))
     print('常用词频度统计结果')
     for (k, v) in c.most_common(50):
-        print('%s%s %s  %d' % ('  ' * (5 - len(k)), k, '*' * int(v / 130), v))
+        print('%s%s %s  %d' % ('  ' * (5 - len(k)), k, '*' * int(v / 10000), v))
 
     for f in filedfiles:
         getfiledtop(c,f,200)

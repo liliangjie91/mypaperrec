@@ -23,20 +23,31 @@ logger.info("running %s" % ' '.join(sys.argv))
 testwl=[u'中国',u'一带一路',u'广东省',u'计算机',u'经济',u'微信']
 
 class MySentences(object):
-    def __init__(self, dirname):
+    def __init__(self, dirname, start=0):
         self.dirname = dirname
+        self.start=start
 
     def __iter__(self):
         if os.path.isfile(self.dirname):
             with codecs.open(self.dirname, 'rU', 'utf8', errors='ignore') as f:
                 for line in f:
-                    yield line.split()
+                    l=line.strip().split()
+                    if self.start:
+                        if len(l)>self.start:
+                            yield l[self.start:]
+                    else:
+                        yield l
         else:
             for fname in os.listdir(self.dirname):
                 if '.txt' in fname:
                     with codecs.open(os.path.join(self.dirname, fname), 'rU', 'utf8', errors='ignore') as f:
                         for line in f:
-                            yield line.split()
+                            l = line.strip().split()
+                            if self.start:
+                                if len(l) > self.start:
+                                    yield l[self.start:]
+                            else:
+                                yield l
 
 def train_gensim(modelname,indatapath,size=200,window=5,minc=3,iter=5,sg=0,hs=0,neg=5,annoy=False,test=False):
     modelfolder= BASE_PATH + r'/model/gensim/%s' % modelname
@@ -52,8 +63,6 @@ def train_gensim(modelname,indatapath,size=200,window=5,minc=3,iter=5,sg=0,hs=0,
     model = Word2Vec(MySentences(indatapath), size=size, iter=iter, window=window, min_count=minc,
                      sg=sg,hs=hs,negative=neg,workers=2)  # workers=multiprocessing.cpu_count()
     print("gensim训练完毕 %.2f secs" % (time.time() - word2vec_start_time))
-    if test:
-        test_model_jinyong(model,limt=10)
     model.save(modelpath)  #保存整个模型以及训练过程的数据（其实会生成3个文件model,syn0,syn1 or syn1neg）
     # model.wv.save_word2vec_format(vecname, binary=False)
     # print_mostsimi(model, testwl)
