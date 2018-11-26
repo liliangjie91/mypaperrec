@@ -147,4 +147,4 @@ if __name__ == '__main__':
     # get_intersec_log(user_typeinter_09,alllog_b09,alllog_d09,"ulog_typeinter09")
     # gen_samples(ulog_typeinter18_d,ulog_typeinter18_dbdiff,"samples_18")
     # gen_samples(ulog_typeinter09_d,ulog_typeinter09_dbdiff,"samples_09")
-    get_highquality_ulog(goodpath+'/log18_posi.txt', goodpath+'/highq/log18_highq_posi.txt')
+    get_highquality_ulog(goodpath+'/log18_neg.txt', goodpath+'/highq/log18_highq_neg.txt')
