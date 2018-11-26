@@ -5,7 +5,7 @@
 import codecs
 import os,sys,json
 import logging
-import progressbar
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
@@ -60,9 +60,14 @@ def list2txt(l,path):
         for i in l:
             f.write(i.encode('utf-8', 'ignore')+'\n')
 
-def load2list(path,to1column=False,separator=None,get1column=-1):
+def load2list(path,to1column=False,separator=None,get1column=-1,start=0):
     '''
-    读取文本返回成list，默认一行一元素，也可按分隔符分割后每部分为一元素，也可单独获取分割后的某列元素为一元素
+    读取文本返回成list，
+    默认一行一元素---进输入path即可
+    也可按分隔符分割后每个词为一个元素---to1column=True
+    也可按分隔符分割后每个词为一个元素(可选从哪一列开始，默认全部，即从0开始)---to1column=True，start=1
+    也可单独获取分割后的某列词为一元素---get1column=需要的那一列从0开始
+    
     :param path: 
     :type path: str
     :param to1column: 
@@ -79,13 +84,14 @@ def load2list(path,to1column=False,separator=None,get1column=-1):
     if os.path.isfile(path):
         with codecs.open(path,'rU',encoding=bianma,errors='replace') as f:
             for l in f:
-                if l.strip():
+                l=l.strip()
+                if l:
                     if to1column :
-                        res.extend(l.split(separator))
+                        res.extend(l.split(separator)[start:])
                     elif get1column>=0:
                         res.append(l.split(separator)[get1column])
                     else:
-                        res.append(l.strip())
+                        res.append(l)
     return res
 
 def savejson(path,j):
@@ -105,6 +111,17 @@ def loadjson(path):
     with codecs.open(path, "rU") as f:
         res=json.load(f)
     return res
+
+def json2txt(path,respath):
+    logger.info("loading json file : %s" %path)
+    f = codecs.open(path)
+    d=json.load(f)
+    f.close()
+    logger.info("writing txt file : %s" % respath)
+    with codecs.open(respath,'a+',encoding=bianma) as ff:
+        for k in d.keys():
+            l=k+' '+' '.join(d[k])
+            ff.write(l.encode(bianma) + '\n')
 
 
 def load2dic(path, separator=None):

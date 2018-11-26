@@ -11,6 +11,7 @@ logging.root.setLevel(level=logging.INFO)
 logger.info("running %s" % ' '.join(sys.argv))
 
 datapath='./data/data_raw'
+goodpath='./data/good'
 alllog_b09=datapath+r'/log_b_09.txt'
 alllog_b18=datapath+r'/log_b_18.txt'
 alllog_d09=datapath+r'/log_d_09.json'
@@ -79,6 +80,39 @@ def get_intersec_log(user_interseclist, alllog_b, alllog_d,prefix):
     util.savejson("%s/%s_dbdiff.json" %(datapath,prefix), interseced_dbdiff)
     logger.info("done!")
 
+def del_once_action():
+    #删除只有一次操作的用户？
+    pass
+
+def get_highquality_ulog(inpath,outpath,actmin=2,actmax=300):
+    #优质用户历史，操作数>2 <300(操作太多可能是爬虫)
+    oldulog = util.load2list(inpath)
+    newulog = []
+    for l in oldulog:
+        ws=l.strip().split()[1:] #每一行第一个是id
+        if actmax>len(ws)>actmin:
+            newulog.append(l)
+    util.list2txt(newulog,outpath)
+
+def get_userlist(path,logpath=None):
+    #获取用户id列表，返回list
+    if os.path.exists(path):
+        return util.load2list(path)
+    else:
+        ul = util.load2list(logpath,get1column=0)
+        util.list2txt(ul,path)
+        return ul
+
+def get_fnlist(path,logpath):
+    #获取文件名列表，返回list
+    if os.path.exists(path):
+        return util.load2list(path)
+    else:
+        ul = util.load2list(logpath,to1column=True,start=1)
+        res=list(set(ul))
+        util.list2txt(res,path)
+        return res
+
 def gen_samples(ulog_d, ulog_diff, prefix):
     logger.info("generate posi & neg samples for myrec...")
     dlog=util.loadjson(ulog_d)
@@ -111,5 +145,6 @@ def gen_samples(ulog_d, ulog_diff, prefix):
 if __name__ == '__main__':
     # get_intersec_childlog()
     # get_intersec_log(user_typeinter_09,alllog_b09,alllog_d09,"ulog_typeinter09")
-    gen_samples(ulog_typeinter18_d,ulog_typeinter18_dbdiff,"samples_18")
-    gen_samples(ulog_typeinter09_d,ulog_typeinter09_dbdiff,"samples_09")
+    # gen_samples(ulog_typeinter18_d,ulog_typeinter18_dbdiff,"samples_18")
+    # gen_samples(ulog_typeinter09_d,ulog_typeinter09_dbdiff,"samples_09")
+    get_highquality_ulog(goodpath+'/log18_posi.txt', goodpath+'/highq/log18_highq_posi.txt')
