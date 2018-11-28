@@ -12,20 +12,26 @@ logger.info("running %s" % ' '.join(sys.argv))
 
 datapath='./data/data_raw'
 goodpath='./data/good'
+highqpath='./data/highq'
 alllog_b09=datapath+r'/log_b_09.txt'
 alllog_b18=datapath+r'/log_b_18.txt'
 alllog_d09=datapath+r'/log_d_09.json'
 alllog_d18=datapath+r'/log_d_18.json'
 user_typeinter_18 = datapath+r'/userdb_intersec_18.txt'
 user_typeinter_09 = datapath+r'/userdb_intersec_09.txt'
-user_timeinter_b = datapath+r'/userb_intersec_0918.txt'
-user_timeinter_d = datapath+r'/userd_intersec_0918.txt'
 ulog_typeinter09_d = datapath + r'/ulog_typeinter09_d.json'
 ulog_typeinter09_b = datapath + r'/ulog_typeinter09_b.json'
 ulog_typeinter09_dbdiff = datapath + r'/ulog_typeinter09_dbdiff.json'
 ulog_typeinter18_d = datapath + r'/ulog_typeinter18_d.json'
 ulog_typeinter18_b = datapath + r'/ulog_typeinter18_b.json'
 ulog_typeinter18_dbdiff = datapath + r'/ulog_typeinter18_dbdiff.json'
+
+user_timeinter_b = datapath+r'/userb_intersec_0918.txt'
+user_timeinter_d = datapath+r'/userd_intersec_0918.txt'
+
+ulog_sample_18_highq_posi=highqpath+'/log18_highq_posi.txt'
+ulog_sample_18_highq_neg=highqpath+'/log18_highq_neg.txt'
+
 
 
 def get_sub_dic(dicin, keys):
@@ -55,29 +61,41 @@ def get_dic_diff(logb, logd):
     #util.savejson(datapath+'/ufn_typeinter_09_bddiff.json',logdb)
     return logdb
 
-def get_intersec_log(user_interseclist, alllog_b, alllog_d,prefix):
-    uinterl=util.load2list(user_interseclist)
-    blog=util.load2dic(alllog_b, '\t')
-    dlog=util.loadjson(alllog_d)
+def get_intersec_log(user_interseclist, alllog_b, alllog_d,prefix,rootpath=datapath):
+    '''
+    获取用户d,b日志的交集用户，并获取这群用户的d，b以及b-d日志分别储存
+    :param user_interseclist: 
+    :type user_interseclist: 
+    :param alllog_b: 
+    :type alllog_b: 
+    :param alllog_d: 
+    :type alllog_d: 
+    :param prefix: 
+    :type prefix: 
+    :return: 
+    :rtype: 
+    '''
+    blog=util.load2dic(alllog_b)
+    # dlog=util.loadjson(alllog_d)
+    dlog = util.load2dic(alllog_d)
     userb=blog.keys()
     userd=dlog.keys()
-    logger.info("caculating two logs` intersection user...")
-    uintertype18=list(set(userb).intersection(set(userd)))
-    if len(uintertype18)==len(uinterl):
-        print("file %s is correct!" % user_interseclist)
-        del uintertype18
+    if not os.path.exists(user_interseclist):
+        logger.info("caculating two logs` intersection user...")
+        uintersec = list(set(userb).intersection(set(userd)))
+        util.list2txt(uintersec,user_interseclist)
     else:
-        print("file %s is wrong!!!" % user_interseclist)
-        return
-    interseced_d = get_sub_dic(dlog, uinterl)
-    interseced_b = get_sub_dic(blog, uinterl)
+        logger.info("loading two logs` intersection user file : %s" %user_interseclist)
+        uintersec = util.load2list(user_interseclist)
+    interseced_d = get_sub_dic(dlog, uintersec)
+    interseced_b = get_sub_dic(blog, uintersec)
     del dlog
     del blog
-    interseced_dbdiff = get_dic_diff(interseced_b, interseced_d)
+    # interseced_dbdiff = get_dic_diff(interseced_b, interseced_d)
     logger.info("saving ress...")
-    util.savejson("%s/%s_d.json" %(datapath,prefix),interseced_d)
-    util.savejson("%s/%s_b.json" %(datapath,prefix), interseced_b)
-    util.savejson("%s/%s_dbdiff.json" %(datapath,prefix), interseced_dbdiff)
+    util.savejson("%s/%s_posi.json" %(rootpath,prefix),interseced_d)
+    util.savejson("%s/%s_neg.json" %(rootpath,prefix), interseced_b)
+    # util.savejson("%s/%s_dbdiff.json" %(rootpath,prefix), interseced_dbdiff)
     logger.info("done!")
 
 def del_once_action():
@@ -113,6 +131,12 @@ def get_fnlist(path,logpath):
         util.list2txt(res,path)
         return res
 
+def mergefns(path1,path2,respath):
+    la=util.load2list(path1)
+    lb=util.load2list(path2)
+    res=list(set(la).union(set(lb)))
+    util.list2txt(res,respath)
+
 def gen_samples(ulog_d, ulog_diff, prefix):
     logger.info("generate posi & neg samples for myrec...")
     dlog=util.loadjson(ulog_d)
@@ -139,12 +163,22 @@ def gen_samples(ulog_d, ulog_diff, prefix):
     util.list2txt(negsam, './data/good/' + prefix + '_neg.txt')
 
 
-
-
-
 if __name__ == '__main__':
-    # get_intersec_childlog()
-    # get_intersec_log(user_typeinter_09,alllog_b09,alllog_d09,"ulog_typeinter09")
+    # get_intersec_log(goodpath+'/highq/uintersec18.txt',
+    #                  ulog_sample_18_highq_neg,ulog_sample_18_highq_posi,
+    #                  "ulog18_highq_interseced",rootpath=goodpath+'/highq')
+    # util.json2txt(goodpath+'/highq/ulog18_highq_interseced_neg.json',goodpath+'/highq/ulog18_highq_interseced_neg.txt')
+    # util.json2txt(goodpath + '/highq/ulog18_highq_interseced_posi.json',
+    #               goodpath + '/highq/ulog18_highq_interseced_posi.txt')
+
     # gen_samples(ulog_typeinter18_d,ulog_typeinter18_dbdiff,"samples_18")
     # gen_samples(ulog_typeinter09_d,ulog_typeinter09_dbdiff,"samples_09")
-    get_highquality_ulog(goodpath+'/log18_neg.txt', goodpath+'/highq/log18_highq_neg.txt')
+    # get_highquality_ulog(goodpath+'/log18_neg.txt', goodpath+'/highq/log18_highq_neg.txt')
+    # a=get_fnlist(highqpath+'/fn_neg.txt',highqpath+'/log18_highq_neg.txt')
+    mergefns(highqpath+'/fn_posi.txt',
+             highqpath+'/fn_neg.txt',
+             highqpath+'/fn18_all.txt')
+    mergefns(highqpath + '/highq_5w/fn_posi.txt',
+             highqpath + '/highq_5w/fn_neg.txt',
+             highqpath + '/highq_5w/fn18_5w_all.txt')
+    pass
