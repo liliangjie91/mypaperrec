@@ -174,11 +174,11 @@ if __name__ == '__main__':
     # gen_samples(ulog_typeinter18_d,ulog_typeinter18_dbdiff,"samples_18")
     # gen_samples(ulog_typeinter09_d,ulog_typeinter09_dbdiff,"samples_09")
     # get_highquality_ulog(goodpath+'/log18_neg.txt', goodpath+'/highq/log18_highq_neg.txt')
-    # a=get_fnlist(highqpath+'/fn_neg.txt',highqpath+'/log18_highq_neg.txt')
-    mergefns(highqpath+'/fn_posi.txt',
-             highqpath+'/fn_neg.txt',
-             highqpath+'/fn18_all.txt')
-    mergefns(highqpath + '/highq_5w/fn_posi.txt',
-             highqpath + '/highq_5w/fn_neg.txt',
-             highqpath + '/highq_5w/fn18_5w_all.txt')
+    a=get_fnlist('./data/data_seg/logall/fn18all_d.txt','./data/data_seg/logall/log_d_18.txt')
+    b=get_fnlist('./data/data_seg/logall/fn18all_b.txt','./data/data_seg/logall/log_b_18.txt')
+    res = list(set(a).union(set(b)))
+    util.list2txt(res, './data/data_seg/logall/fn18all_all.txt')
+    # mergefns('./data/data_seg/logall/fn18all_d.txt',
+    #          './data/data_seg/logall/fn18all_b.txt',
+    #          './data/data_seg/logall/fn18all_all.txt')
     pass

@@ -52,7 +52,7 @@ def list2txt(l,path):
     :param path: 
     :return: 
     '''
-    logger.info("saving list2file : %s" % path)
+    logger.info("saving list2file : %s\nlength of list %d" %(path,len(l)))
     if os.path.exists(path):
         logger.info("file %s exists del it.." %path)
         os.remove(path)
@@ -92,6 +92,7 @@ def load2list(path,to1column=False,separator=None,get1column=-1,start=0):
                         res.append(l.split(separator)[get1column])
                     else:
                         res.append(l)
+    logger.info("length of list %d" %len(res))
     return res
 
 def savejson(path,j):
