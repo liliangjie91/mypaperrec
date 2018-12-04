@@ -23,6 +23,11 @@ logger.info("running %s" % ' '.join(sys.argv))
 testwl=[u'中国',u'一带一路',u'广东省',u'计算机',u'经济',u'微信']
 
 class MySentences(object):
+    '''
+    根据分好词的文件生成句子序列，用于word2vec训练
+    dirname:分好词的文件路径，可以是单个文件路径也可以是文件夹地址，文件以txt结尾
+    start:从一行的第几个元素开始算词。因为有的文件每行第一个元素是用户id，则start=1用于略过id，
+    '''
     def __init__(self, dirname, start=0):
         self.dirname = dirname
         self.start=start
