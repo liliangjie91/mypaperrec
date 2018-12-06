@@ -9,6 +9,7 @@ import logging
 import sys
 import IOTools
 import time
+import Path
 import util_common as util
 
 bianma='utf8'
@@ -16,16 +17,14 @@ basepath=r'./data'
 # bianma='gb18030'
 ss = segmentation.SentenceSegmentation()
 ws = segmentation.WordSegmentation()
-print("add other jieba dicts")
-ws.addotherdics()
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
 logging.root.setLevel(level=logging.INFO)
 logger.info("running %s" % ' '.join(sys.argv))
 
-def seg4oneline(line,minwc=3,minwlen=0,convert=False):
+def segword4oneline(line, minwc=3, minwlen=0, sseg=False, convert=False):
     '''
-    对一行序列/一句话分词
+    对一行输入分词，分词结果是一行list
     :param line: 一行，一句
     :type line: str
     :param minwc: 分词结果最小词数，如果分词后结果小于minwc，则输出空
@@ -48,7 +47,7 @@ def seg4oneline(line,minwc=3,minwlen=0,convert=False):
     else:
         return []
 
-def seg4fulltext(fulltext,sent_num=1):
+def segword4onetext(fulltext, sent_num=1):
     '''
     对一段/篇文章做分词，分词结果为列表，每个元素为：每句话的分词结果用空格拼接的字符串
     默认原文一句为分词中的一句即sent_num=1
@@ -68,7 +67,7 @@ def seg4fulltext(fulltext,sent_num=1):
     fulltext = IOTools.str_full2half(fulltext)  # 全角转半角
     fulltext = IOTools.Converter('zh-hans').convert(fulltext)  # 繁体转简体
     sentences = ss.segment(fulltext.lower())
-    logger.info("sentences seg done! cost %d secs , get %d sentences" % ((time.time() - t1), len(sentences)))
+    # logger.info("sentences seg done! cost %d secs , get %d sentences" % ((time.time() - t1), len(sentences)))
     if sentences:
         cnt = 0
         tmpsents=[]
@@ -76,19 +75,19 @@ def seg4fulltext(fulltext,sent_num=1):
             cnt += 1
             tmpsents.append(sent)
             if i%sent_num==0:
-                wseg=seg4oneline(''.join(tmpsents))
+                wseg=segword4oneline(''.join(tmpsents))
                 if wseg:
                     wordres.append(' '.join(wseg))
                 tmpsents=[]
         if tmpsents:
-            wseg = seg4oneline(''.join(tmpsents))
+            wseg = segword4oneline(''.join(tmpsents))
             if wseg:
                 wordres.append(' '.join(wseg))
     return wordres
 
 def seg4file_book(infile, respath):
     '''
-    对文章或小说做分词，要注意文章一行不一定一句。所以先把全文组合成一个str，再分句，再分词
+    对文章或小说做分词，一行多句，一个file是一本小说或全文
     本方法原旨在处理一部系列小说，其小说格式较为奇葩
     :param infile: 
     :param respath: 
@@ -106,7 +105,7 @@ def seg4file_book(infile, respath):
     del alllines
     if fulltext:
         t2 = time.time()
-        wordres=seg4fulltext(fulltext)
+        wordres=segword4onetext(fulltext)
         timecha = time.time() - t2
         logger.info("%s done. totaly  %.2f MB cost %.1f secs" % (infile, fsize, timecha))
         logger.info(" --------   %.2f MB/sec --------    %.2fMB/min" % (
@@ -116,6 +115,57 @@ def seg4file_book(infile, respath):
             util.list2txt(wordres, os.path.join(respath, filename))
         else:
             raise Exception("Word Seg Res is None, Please Check Your Input File!!!")
+
+def seg4file_1line1text(infile, respath, resprefix='',to1line=False, hastitle=False, spliter=None):
+    '''
+    对单个文件分词，涉及到分句，
+    默认输入的一行就是一段完整的文本，例如全文or摘要(与小说不同，小说是整个文件为全文)
+    这里分词有很多种方式
+    1:一行输入一行输出，即一段文本分词变成一行(to1line=True, hastitle=False)
+    2(default):一行输入多行输出，即一段文本先分句变成多行，每行句子再分词(to1line=False, hastitle=False)
+    3:输入文本第一列标题，后面是text，text分成一行(类似1),输出类似 title [text分词](to1line=True, hastitle=True)
+    4:输入文本第一列标题，后面是text，text分成多行(类似2),而输出每行都要加上标题 (to1line=False, hastitle=True)
+    :param infile: 
+    :param respath: 
+    :return: 
+    '''
+    alllines=[]
+    fsize = util.get_FileSize(infile)
+    mode01='l1' if to1line else 'l0'
+    mode02='t1' if hastitle else 't0'
+    mode=mode01+mode02
+    logger.info("doing %s  and its %.2fMB and split mode is %s" %(infile,float(fsize),mode))
+    t2 = time.time()
+    cnt=-1
+    with codecs.open(infile, 'rU', encoding=bianma, errors='replace') as f:
+        for line in f:
+            cnt+=1
+            if cnt%50000==0:
+                print("processed line %d" %cnt)
+            l = line.strip()
+            if not l:
+                continue
+            title = ''
+            if hastitle:
+                title = l.split(spliter)[0]
+                l = ''.join(l.split(spliter)[1:])
+            if to1line:
+                wseg=segword4oneline(l,convert=True)
+                if wseg:
+                    alllines.append(' '.join([title]+wseg))
+            else:
+                textseg=segword4onetext(l)
+                for ts in textseg:
+                    alllines.append("%s %s" %(title,ts))
+    timecha = time.time() - t2
+    logger.info("%s done. totaly  %.2f MB cost %.1f secs" % (infile, fsize, timecha))
+    logger.info(" --------   %.2f MB/sec --------    %.2fMB/min" % (
+        float(fsize) / float(timecha), float(fsize) * 60 / float(timecha)))
+    if alllines:
+        filename = os.path.splitext(os.path.split(infile)[1])[0]
+        util.list2txt(alllines, os.path.join(respath, filename+resprefix+'.txt'))
+    else:
+        raise Exception("Word Seg Res is None, Please Check Your Input File!!!")
 
 def seg4file_1line1sent(infile, respath):
     '''
@@ -132,7 +182,7 @@ def seg4file_1line1sent(infile, respath):
             cnt += 1
             if cnt % 50000 == 0: #差不多1分钟
                 logger.info("doing %s line: %d" % (infile, cnt))
-            wseg=seg4oneline(line)
+            wseg=segword4oneline(line)
             if wseg:
                 res.append(' '.join(wseg))
     timecha = time.time() - t0
@@ -167,34 +217,36 @@ def parallel_running(path):
     :rtype: list
     """
     from multiprocessing import Pool
-    infiles = util.getfileinfolder(path, prefix='2')
-    num_cpus = 2   # 直接利用multiprocessing.cpu_count()
+    infiles = util.getfileinfolder(path, prefix='sub_fn18_5w_summery')
+    logger.info("input folder is %s , get %d files in this folder" %(path,len(infiles)))
+    num_cpus = 15   # 直接利用multiprocessing.cpu_count()
     pool = Pool(num_cpus)
     pool.map(wrap, infiles)
     pool.close()
     pool.join()
 
-def wrap(rec_path):
+def wrap(inpath):
     """
     多进程执行的包裹函数
-    :param rec_path: 单文本路径
-    :type rec_path: unicode string
+    :param inpath: 单文本路径
+    :type inpath: unicode string
     :return: 以元组形式返回结果集
     :rtype: tuple
     """
-    segdatapath = basepath + r'/data_seg'
+    respath = Path.path_dataseg + '/sumery_highq5w'
     # seg4file(rec_path,segdatapath)
-    seg4file_book(rec_path, segdatapath)
+    # seg4file_book(rec_path, segdatapath)
+    seg4file_1line1text(inpath, respath, resprefix='_l1t1',to1line=True,hastitle=True)
     # return amount_and_dict
 
 if __name__ == '__main__':
     basepath=r'./data'
     rawdatapath=basepath+r'/data_raw/jinyongquanji'
     segdatapath=basepath+r'/data_seg'
-    segdatapathtmp = basepath + r'/data_seg/tmp'
-    inputpath=segdatapath+r'/shendiaoxialv2.txt'
-    tlbbpath = rawdatapath + r'/tianlongbabu2.txt'
     # seg4file(rawdatapath,segdatapath)
-    seg4file_book(tlbbpath, segdatapathtmp)
-    # parallel_running(rawdatapath)
+    # seg4file_book(tlbbpath, segdatapathtmp)
+    # seg4file_1line1text(Path.path_datahighq5w+'/fn18_5w_summery.txt',
+    #                     Path.path_dataseg + '/sumery_highq5w',
+    #                     resprefix='_1l1t',to1line=True,hastitle=True)
+    parallel_running(Path.path_datahighq5w+'/splitf/')
     # single_running(rawdatapath,segdatapath)

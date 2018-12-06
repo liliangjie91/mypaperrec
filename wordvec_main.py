@@ -10,7 +10,7 @@ import sys
 import IOTools
 import time
 import util_common as util
-from gensim.models import Word2Vec,KeyedVectors
+from gensim.models import Word2Vec,KeyedVectors,Doc2Vec
 from gensim.similarities.index import AnnoyIndexer
 
 BIANMA= 'utf8'
@@ -178,13 +178,13 @@ def test_model(w2vmodel,testwl=testwl,topn=10,evalut=False):
                 %(model.vector_size, model.window, model.min_count, model.iter, model.sg, model.hs, model.negative, ina))
         f.close()
 
-def run_single_train(argslist, mnameprefix='model', justgetname=False):
+def run_single_train(argslist, mnameprefix='w2v', justgetname=False):
     (size, win, minc, iter, sg, hs, neg) = argslist
     segdatapath = datapath + r'/data_seg'
     modeltype = 'sg' if sg else 'cbow'
     opttypehs = 'hs' if hs else ''
     opttypens = 'ns' if neg else ''
-    modelname = '%sd%dw%dminc%diter%d_%s%s%s_w2v'% (mnameprefix, size, win, minc, iter, modeltype, opttypehs, opttypens)
+    modelname = 'w2v_%s_d%dw%dminc%diter%d_%s%s%s'% (mnameprefix, size, win, minc, iter, modeltype, opttypehs, opttypens)
     if not justgetname:
         logger.info("Starting train model : %s" %modelname)
         train_gensim(modelname, indatapath=segdatapath, size=size, window=win,
@@ -199,6 +199,6 @@ def run_train(mnameprefix='model'):
 
 
 if __name__ == '__main__':
-    run_train(mnameprefix="test_")
+    run_train(mnameprefix="test")
 
 
