@@ -58,7 +58,7 @@ def list2txt(l,path):
         os.remove(path)
     with open(path,'w') as f:
         for i in l:
-            f.write(i.strip().encode('utf-8', 'ignore')+'\n')
+            f.write(i.strip().lower().encode('utf-8', 'ignore')+'\n')
 
 def load2list(path,to1column=False,separator=None,get1column=-1,start=0):
     '''

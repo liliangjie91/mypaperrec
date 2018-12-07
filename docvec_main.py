@@ -23,61 +23,91 @@ class MyDocuments(object):
     dirname:分好词的文件路径，可以是单个文件路径也可以是文件夹地址，文件以txt结尾
     start:从一行的第几个元素开始算词。因为有的文件每行第一个元素是用户id，则start=1用于略过id，
     '''
-    def __init__(self, dirname, start=0):
+    def __init__(self, dirname, start=0, subfix='.txt'):
         self.dirname = dirname
         self.start=start
+        self.subfix=subfix #默认只读取txt文件
 
     def __iter__(self):
         cnt = -1
         if os.path.isfile(self.dirname):
-            with codecs.open(self.dirname, 'rU', 'utf8', errors='ignore') as f:
-                for line in f:
-                    l=line.strip().split()
-                    if self.start:
-                        if len(l)>self.start+1: #word must more than 1
-                            yield TaggedDocument(l[self.start:],l[:self.start])
-                    else:
-                        if len(l)>1:
-                            cnt+=1
-                            yield TaggedDocument(l,[cnt])
+            folder,fn=os.path.split(self.dirname)
+            fns=[fn]
         else:
-            for fname in os.listdir(self.dirname):
-                if 'l1t1.txt' in fname:
-                    # logger.info("now precessing file %s" %fname)
-                    with codecs.open(os.path.join(self.dirname, fname), 'rU', 'utf8', errors='ignore') as f:
-                        for line in f:
-                            l = line.strip().split()
-                            if self.start:
-                                if len(l) > self.start+1:
-                                    yield TaggedDocument(l[self.start:],l[:self.start])
-                            else:
-                                if len(l) > 1:
-                                    cnt += 1
-                                    yield TaggedDocument(l, [cnt])
+            folder=self.dirname
+            fns=os.listdir(self.dirname)
+        for fname in fns:
+            if self.subfix in fname:
+                # logger.info("now precessing file %s" %fname)
+                with codecs.open(os.path.join(folder, fname), 'rU', 'utf8', errors='ignore') as f:
+                    for line in f:
+                        l = line.strip().split()
+                        if self.start:
+                            if len(l) > self.start+1:
+                                yield TaggedDocument(l[self.start:],l[:self.start])
+                        else:
+                            if len(l) > 1:
+                                cnt += 1
+                                yield TaggedDocument(l, [cnt])
 
-def train_gensim(modelname,indatapath,size=200,window=5,minc=2,iter=5,sg=0,hs=0,neg=5,trainwv=1,annoy=False):
+def update_gensim(oldmodelname, indatapath, prefix='',
+                  size=200, window=5, minc=2, iter=5, sg=0, hs=0, neg=5, trainwv4dbow=1, newdoc=False):
+    #setting filenames
+    modelfolder= datapath + r'/model/%s' % oldmodelname
+    if not os.path.exists(modelfolder):
+        os.mkdir(modelfolder)
+    modelpath= "%s/%s.model" % (modelfolder, oldmodelname)
+    wvecname = "%s/%s_up_%s.wv" % (modelfolder, oldmodelname,prefix)
+    dvecname = "%s/%s_up_%s.dv" % (modelfolder, oldmodelname,prefix)
+    if not os.path.exists(modelpath):
+        logger.info("model %s not exists!!! please train it first you can using 'train_gensim' in docvec_main.py ")
+        return
+    #retrain model
+    word2vec_start_time = time.time()
+    model = Doc2Vec.load(modelpath)
+    print("retrain gensim模型:当前时间 : %s" %time.asctime(time.localtime(time.time())))
+    model.sg=sg
+    model.hs=hs
+    model.window=window
+    model.dbow_words=trainwv4dbow
+    model.netative=neg
+    if newdoc:
+        model.min_count = minc
+        model.build_vocab(MyDocuments(indatapath,start=1))
+    model.train(MyDocuments(indatapath,start=1),total_examples=model.corpus_count,epochs=iter)
+    print("retrain gensim 完毕 %.2f secs" % (time.time() - word2vec_start_time))
+    #saving model
+    modelpath = "%s/%s_up_%s.model" % (modelfolder, oldmodelname,prefix)
+    model.save(modelpath)  #保存整个模型以及训练过程的数据（其实会生成3个文件model,syn0,syn1 or syn1neg）
+    model.wv.save_word2vec_format(wvecname)
+    model.docvecs.save_word2vec_format(dvecname)
+    print model
+    print os.path.split(modelpath)[1]
+    # return os.path.splitext(os.path.split(modelpath)[1])[0]
+    # KeyedVectors.load_word2vec_format(vecname)
+    # print_mostsimi(model, testwl)
+
+def train_gensim(modelname, indatapath,
+                 size=200, window=5, minc=2, iter=5, sg=0, hs=0, neg=5, trainwv4dbow=1,annoy=False):
     modelfolder= datapath + r'/model/%s' % modelname
     if not os.path.exists(modelfolder):
         os.mkdir(modelfolder)
-    modelpath="%s/%s.model" %(modelfolder,modelname)
-    wvecname = "%s/%s.wv" % (modelfolder, modelname)
-    dvecname = "%s/%s.dv" % (modelfolder, modelname)
+    modelpath,wvecname,dvecname="%s/%s.model" %(modelfolder,modelname),"%s/%s.wv" % (modelfolder, modelname),"%s/%s.dv" % (modelfolder, modelname)
     if os.path.exists(modelpath):
         logger.info("model %s has already exists!!!")
         return
     word2vec_start_time = time.time()
-
     print("开始训练gensim模型:当前时间 : %s" %time.asctime(time.localtime(time.time())))
-    model = Doc2Vec(MyDocuments(indatapath,start=1),size=size,iter=iter,window=window,min_count=minc,
-                    dm=1-sg,hs=hs,negative=neg,workers=20,dbow_words=trainwv)  # workers=multiprocessing.cpu_count()
+    model = Doc2Vec(MyDocuments(indatapath,start=1), size=size, iter=iter, window=window, min_count=minc,
+                    dm=1-sg, hs=hs, negative=neg, workers=1, dbow_words=trainwv4dbow)  # workers=multiprocessing.cpu_count()
     print("gensim训练完毕 %.2f secs" % (time.time() - word2vec_start_time))
-
     model.save(modelpath)  #保存整个模型以及训练过程的数据（其实会生成3个文件model,syn0,syn1 or syn1neg）
-    model.wv.save_word2vec_format(wvecname, binary=False)
-    model.docvecs.save(dvecname)
+    model.wv.save_word2vec_format(wvecname) #单纯保存词向量,文本文件
+    model.docvecs.save_word2vec_format(dvecname) #单纯保存文档向量,文本文件
     print model
     # KeyedVectors.load_word2vec_format(vecname)
     # print_mostsimi(model, testwl)
+    # return modelname
 
 def print_mostsimi(model, wordlist, annoyindex=None,top=10):
     '''
@@ -92,19 +122,25 @@ def print_mostsimi(model, wordlist, annoyindex=None,top=10):
     :rtype: 
     '''
     t = time.time()
+    outpath='./modeltest.txt'
+    print('writing most similar res in file : %s' %outpath)
+    f=open(outpath,'w')
+    f.write('%s\n'%model)
     for w in wordlist:
-        print("------------for word : %s" %w)
+        f.write("------------for word : %s\n" %w)
         try:
             result = model.docvecs.most_similar(w,topn=top,indexer=annoyindex)
             for e in result:
-                print("%s : %.3f" %(e[0],e[1]))
-            print("**********************************************")
+                f.write("%s : %.3f\n" % (e[0], e[1]))
+            f.write("**********************************************\n")
             result = model.most_similar([model.docvecs[w]], topn=top, indexer=annoyindex)
             for e in result:
-                print("%s : %.3f" % (e[0], e[1]))
+                f.write("%s : %.3f\n" % (e[0].encode('utf8'), e[1]))
         except KeyError, e:
-            print("word %s is not in the model!" %w)
+            f.write("word %s is not in the model!\n" %w)
     print("--------------time cost %.3f secs/word " %((time.time()-t)/float(len(wordlist))))
+    f.write("\n")
+    f.close()
 
 def test_model(d2vmodel, testwl=testwl, topn=10, evalut=False):
     model = Doc2Vec.load(d2vmodel) if type(d2vmodel) is str else d2vmodel
@@ -116,32 +152,47 @@ def test_model(d2vmodel, testwl=testwl, topn=10, evalut=False):
                 %(model.vector_size, model.window, model.min_count, model.iter, model.sg, model.hs, model.negative, ina))
         f.close()
 
-def run_single_train(argslist, mnameprefix='model', justgetname=False):
-    (size, win, minc, iter, sg, hs, neg) = argslist
-    segdatapath = datapath + r'/data_seg/sumery_highq5w'
-    modeltype = 'dbow' if sg else 'dm'
+def gen_model_name(argslist, mnameprefix='model'):
+    (size, win, minc, iter, sg, hs, neg, traindbowwv) = argslist
+    modetype = 'dbow' if sg else 'dm'
     opttypehs = 'hs' if hs else ''
     opttypens = 'ns' if neg else ''
-    modelname = 'd2v_%s_d%dw%dminc%diter%d_%s%s%s'% (mnameprefix, size, win, minc, iter, modeltype, opttypehs, opttypens)
+    mode="%s%s%s" %(modetype, opttypehs, opttypens)
+    modelname = 'd2v_%s_d%dw%dminc%diter%d_%s' % (mnameprefix, size, win, minc, iter, mode)
+    return modelname,mode
+
+def run_single_train(argslist,inputdocs,oldmodelname='',mnameprefix='model', justgetname=False):
+    (size, win, minc, iter, sg, hs, neg, traindbowwv) = argslist
+    modelname,mode=gen_model_name(argslist,mnameprefix)
     if not justgetname:
-        logger.info("Starting train model : %s" %modelname)
-        train_gensim(modelname, indatapath=segdatapath, size=size, window=win,
-                     minc=minc, iter=iter, sg=sg, hs=hs, neg=neg)
+        if oldmodelname:
+            modelname='%s_up_%s'%(oldmodelname,mode)
+            logger.info("Starting retrain model : %s" % oldmodelname)
+            update_gensim(oldmodelname, indatapath=inputdocs, prefix=mode,size=size, window=win,
+                          minc=minc, iter=iter, sg=sg, hs=hs, neg=neg, trainwv4dbow=traindbowwv)
+        else:
+            logger.info("Starting train model : %s" %modelname)
+            train_gensim(modelname, indatapath=inputdocs, size=size, window=win,
+                     minc=minc, iter=iter, sg=sg, hs=hs, neg=neg, trainwv4dbow=traindbowwv)
     return modelname
 
-def run_train(mnameprefix='model',justgetname=False):
-    #        dim,win,min,itr,sg,hs,neg
-    argls = [[300, 5, 1, 50, 0, 0, 10]]
+def run_train(mnameprefix='model',oldmodelname='',justgetname=False):
+    #        dim,win,min,itr,sg,hs,neg,traindbowwv
+    argls = [[300, 5, 3, 30, 0, 0, 10, 1]]
+    # inputdocs = datapath + r'/data_seg/sumery_highq5w/old'
+    inputdocs = Path.path_datahighq5w + r'/log18_highq_5w_posi.txt'
     mnames=[]
     for argl in argls:
-        modelname = run_single_train(argl, mnameprefix=mnameprefix ,justgetname=justgetname)
+        modelname = run_single_train(argl,inputdocs,oldmodelname=oldmodelname,mnameprefix=mnameprefix ,justgetname=justgetname)
         mnames.append(modelname)
     return  mnames
 
 if __name__ == '__main__':
-    names=run_train(mnameprefix='highq5w_l1t1')
+    oldmodelname = ''
+    names=run_train(mnameprefix='udownhighq5wposi',oldmodelname=oldmodelname,justgetname=True)
     for mname in names:
-        modelpath="%s/%s/%s.model" %(Path.path_model,mname,mname)
+        if oldmodelname:
+            modelpath = "%s/%s/%s.model" % (Path.path_model,oldmodelname,mname)
+        else:
+            modelpath = "%s/%s/%s.model" % (Path.path_model, mname, mname)
         test_model(modelpath)
-
-

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by lljzhiwang on 2018/11/23
-import os,json,time,sys
+import os,json,time,sys,Path
 import util_common as util
 import logging
 
@@ -131,16 +131,30 @@ def get_fnlist(path,logpath):
         util.list2txt(res,path)
         return res
 
+def filter_fns(inpath,outpath):
+    inli=get_fnlist(inpath,'')
+    res=[]
+    for fn in inli:
+        res.append(fn.lower())
+    a= list(set(res))
+    util.list2txt(a,outpath)
+    print len(a)
+    return a
+
 def mergefns(path1,path2,respath):
     la=util.load2list(path1)
     lb=util.load2list(path2)
     res=list(set(la).union(set(lb)))
     util.list2txt(res,respath)
 
-def gen_samples(ulog_d, ulog_diff, prefix):
+def gen_samples(ulog_d, ulog_diff, prefix, outpath):
     logger.info("generate posi & neg samples for myrec...")
-    dlog=util.loadjson(ulog_d)
-    difflog = util.loadjson(ulog_diff)
+    if '.json' in ulog_d:
+        dlog=util.loadjson(ulog_d)
+        difflog = util.loadjson(ulog_diff)
+    else:
+        dlog=util.load2dic(ulog_d)
+        difflog = util.load2dic(ulog_diff)
     posisam=[]
     negsam=[]
     logger.info("gen posi samples...")
@@ -148,9 +162,9 @@ def gen_samples(ulog_d, ulog_diff, prefix):
         fns=dlog[k]
         if fns:
             for fn in fns:
-                posisam.append("%s+%s\t%d"%(k,fn,1))
+                posisam.append("%s+%s\t%d"%(k,fn.lower(),1))
     print(len(posisam))
-    util.list2txt(posisam,'./data/good/'+prefix+'_posi.txt')
+    util.list2txt(posisam,outpath+'/'+prefix+'_posi.txt')
     del dlog
     del posisam
     logger.info("gen neg samples...")
@@ -158,9 +172,9 @@ def gen_samples(ulog_d, ulog_diff, prefix):
         fns=difflog[k]
         if fns:
             for fn in fns:
-                negsam.append("%s+%s\t%d"%(k,fn,0))
+                negsam.append("%s+%s\t%d"%(k,fn.lower(),0))
     print(len(negsam))
-    util.list2txt(negsam, './data/good/' + prefix + '_neg.txt')
+    util.list2txt(negsam, outpath+'/' + prefix + '_neg.txt')
 
 
 if __name__ == '__main__':
@@ -174,11 +188,16 @@ if __name__ == '__main__':
     # gen_samples(ulog_typeinter18_d,ulog_typeinter18_dbdiff,"samples_18")
     # gen_samples(ulog_typeinter09_d,ulog_typeinter09_dbdiff,"samples_09")
     # get_highquality_ulog(goodpath+'/log18_neg.txt', goodpath+'/highq/log18_highq_neg.txt')
-    a=get_fnlist('./data/data_seg/logall/fn18all_d.txt','./data/data_seg/logall/log_d_18.txt')
-    b=get_fnlist('./data/data_seg/logall/fn18all_b.txt','./data/data_seg/logall/log_b_18.txt')
-    res = list(set(a).union(set(b)))
-    util.list2txt(res, './data/data_seg/logall/fn18all_all.txt')
+    # a=get_fnlist('./data/data_seg/logall/fn18all_d.txt','./data/data_seg/logall/log_d_18.txt')
+    # b=get_fnlist('./data/data_seg/logall/fn18all_b.txt','./data/data_seg/logall/log_b_18.txt')
+    # res = list(set(a).union(set(b)))
+    # util.list2txt(res, './data/data_seg/logall/fn18all_all.txt')
     # mergefns('./data/data_seg/logall/fn18all_d.txt',
     #          './data/data_seg/logall/fn18all_b.txt',
     #          './data/data_seg/logall/fn18all_all.txt')
+    # a=filter_fns('./data/highq_5w/fn18_5w_all.txt','./data/highq_5w/fn18_5w_all_unic.txt')
+    # gen_samples(Path.path_datahighq5w+'/log18_highq_5w_posi.txt',
+    #             Path.path_datahighq5w+'/log18_highq_5w_neg.txt',
+    #             'sample_highq5w',
+    #             Path.path_datahighq5w)
     pass
