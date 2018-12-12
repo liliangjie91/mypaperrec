@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by lljzhiwang on 2018/11/23
-import os,json,time,sys,Path
+import os,json,time,sys,util_path
 import util_common as util
 import logging
 
