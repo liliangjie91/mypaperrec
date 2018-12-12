@@ -4,7 +4,7 @@
 from gensim.models.doc2vec import Doc2Vec
 import util_common as util
 import numpy as np
-import os,sys,Path,time
+import os,sys,util_path,time
 
 
 def get_feature_gensimmodel(usermodel,filemodel,samplefile):
@@ -38,7 +38,7 @@ def get_feature_gensimmodel(usermodel,filemodel,samplefile):
     # util.list2txt(label,'./lable.txt')
 
 if __name__ == '__main__':
-    get_feature_gensimmodel(Path.path_model+'/d2v_udownhighq5wposi_d300w5minc3iter30_dmns/d2v_udownhighq5wposi_d300w5minc3iter30_dmns.model',
-                            Path.path_model+'/d2v_highq5w_l1t1_d300w5minc3iter30_dmns/d2v_highq5w_l1t1_d300w5minc3iter30_dmns.model',
-                            Path.path_datahighq5w+'/sample_highq5w_neg.txt')
+    get_feature_gensimmodel(util_path.path_model + '/d2v_udownhighq5wposi_d300w5minc3iter30_dmns/d2v_udownhighq5wposi_d300w5minc3iter30_dmns.model',
+                            util_path.path_model + '/d2v_highq5w_l1t1_d300w5minc3iter30_dmns/d2v_highq5w_l1t1_d300w5minc3iter30_dmns.model',
+                            util_path.path_datahighq5w + '/sample_highq5w_neg.txt')
 
