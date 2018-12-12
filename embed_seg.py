@@ -2,21 +2,23 @@
 # -*- coding: utf-8 -*-
 # Created by liliangjie on 2018/11/10 
 # Email llj : laiangnaduo91@gmail.com
-import segmentation
+import util_segment
 import os
 import codecs
 import logging
 import sys
-import IOTools
+# import IOTools
+from tc_conversion.langconv import *
+from tc_conversion.full_half_conversion import *
 import time
-import Path
+import util_path
 import util_common as util
 
 bianma='utf8'
 basepath=r'./data'
 # bianma='gb18030'
-ss = segmentation.SentenceSegmentation()
-ws = segmentation.WordSegmentation()
+ss = util_segment.SentenceSegmentation()
+ws = util_segment.WordSegmentation()
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
 logging.root.setLevel(level=logging.INFO)
@@ -38,8 +40,8 @@ def segword4oneline(line, minwc=3, minwlen=0, sseg=False, convert=False):
     '''
     line = line.strip().lower()
     if convert:
-        line = IOTools.str_full2half(line)  # 全角转半角
-        line = IOTools.Converter('zh-hans').convert(line)  # 繁体转简体
+        line = str_full2half(line)  # 全角转半角
+        line = Converter('zh-hans').convert(line)  # 繁体转简体
     wordseg2 = ws.segment(line)
     wordseg = [i for i in wordseg2 if len(i) > minwlen]
     if len(wordseg) > minwc:
@@ -64,8 +66,8 @@ def segword4onetext(fulltext, sent_num=1):
     wordres = []
     t1=time.time()
     # 对整体全文直接做转换效率比每句做一遍高
-    fulltext = IOTools.str_full2half(fulltext)  # 全角转半角
-    fulltext = IOTools.Converter('zh-hans').convert(fulltext)  # 繁体转简体
+    fulltext = str_full2half(fulltext)  # 全角转半角
+    fulltext = Converter('zh-hans').convert(fulltext)  # 繁体转简体
     sentences = ss.segment(fulltext.lower())
     # logger.info("sentences seg done! cost %d secs , get %d sentences" % ((time.time() - t1), len(sentences)))
     if sentences:
@@ -233,7 +235,7 @@ def wrap(inpath):
     :return: 以元组形式返回结果集
     :rtype: tuple
     """
-    respath = Path.path_dataseg + '/sumery_highq5w'
+    respath = util_path.path_dataseg + '/sumery_highq5w'
     # seg4file(rec_path,segdatapath)
     # seg4file_book(rec_path, segdatapath)
     seg4file_1line1text(inpath, respath, resprefix='_l1t1',to1line=True,hastitle=True)
@@ -248,5 +250,5 @@ if __name__ == '__main__':
     # seg4file_1line1text(Path.path_datahighq5w+'/fn18_5w_summery.txt',
     #                     Path.path_dataseg + '/sumery_highq5w',
     #                     resprefix='_1l1t',to1line=True,hastitle=True)
-    parallel_running(Path.path_datahighq5w+'/splitf/')
+    parallel_running(util_path.path_datahighq5w + '/splitf/')
     # single_running(rawdatapath,segdatapath)

@@ -3,7 +3,7 @@
 # Created by lljzhiwang on 2018/12/6
 
 import psutil
-import time,Path,sys,os,codecs,logging
+import time,util_path,sys,os,codecs,logging
 import util_common as util
 from gensim.models.doc2vec import Doc2Vec,TaggedDocument
 
@@ -60,7 +60,7 @@ def update_gensim(oldmodelname, indatapath, prefix='',
     wvecname = "%s/%s_up_%s.wv" % (modelfolder, oldmodelname,prefix)
     dvecname = "%s/%s_up_%s.dv" % (modelfolder, oldmodelname,prefix)
     if not os.path.exists(modelpath):
-        logger.info("model %s not exists!!! please train it first you can using 'train_gensim' in docvec_main.py ")
+        logger.info("model %s not exists!!! please train it first you can using 'train_gensim' in embed_docvec.py ")
         return
     #retrain model
     word2vec_start_time = time.time()
@@ -180,7 +180,7 @@ def run_train(mnameprefix='model',oldmodelname='',justgetname=False):
     #        dim,win,min,itr,sg,hs,neg,traindbowwv
     argls = [[300, 5, 3, 30, 0, 0, 10, 1]]
     # inputdocs = datapath + r'/data_seg/sumery_highq5w/old'
-    inputdocs = Path.path_datahighq5w + r'/log18_highq_5w_posi.txt'
+    inputdocs = util_path.path_datahighq5w + r'/log18_highq_5w_posi.txt'
     mnames=[]
     for argl in argls:
         modelname = run_single_train(argl,inputdocs,oldmodelname=oldmodelname,mnameprefix=mnameprefix ,justgetname=justgetname)
@@ -192,7 +192,7 @@ if __name__ == '__main__':
     names=run_train(mnameprefix='udownhighq5wposi',oldmodelname=oldmodelname,justgetname=True)
     for mname in names:
         if oldmodelname:
-            modelpath = "%s/%s/%s.model" % (Path.path_model,oldmodelname,mname)
+            modelpath = "%s/%s/%s.model" % (util_path.path_model, oldmodelname, mname)
         else:
-            modelpath = "%s/%s/%s.model" % (Path.path_model, mname, mname)
+            modelpath = "%s/%s/%s.model" % (util_path.path_model, mname, mname)
         test_model(modelpath)

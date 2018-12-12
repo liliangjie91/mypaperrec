@@ -6,7 +6,7 @@ import jieba
 import jieba.analyse
 import os
 import codecs
-import Path
+import util_path
 
 
 class SentenceSegmentation(object):
@@ -183,13 +183,13 @@ class WordSegmentation(object):
     '''
 
     stop_words_file = {}.fromkeys([line.decode('utf8').strip()
-                                   for line in open(Path.stop_words_path)])  # 加载停用词典
-    jieba.set_dictionary(Path.jieba_dict_path)  # 加载专业词jieba词典
+                                   for line in open(util_path.stop_words_path)])  # 加载停用词典
+    jieba.set_dictionary(util_path.jieba_dict_path)  # 加载专业词jieba词典
     jieba.initialize()
 
 
     def addotherdics(self):
-        dfolder=Path.otherdict_folder
+        dfolder=util_path.otherdict_folder
         othdpath=[os.path.join(dfolder,i) for i in os.listdir(dfolder)]
         for inf in othdpath:
             print("add words from %s" %inf)
@@ -272,7 +272,6 @@ class Segmentation(object):
 # 测试
 if __name__ == '__main__':
     import uniout
-    import IOTools
 
     ws = WordSegmentation()
     # ee = u'445我爱祖国天安门DNA1234'

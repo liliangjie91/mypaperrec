@@ -7,7 +7,6 @@ import psutil
 import codecs
 import logging
 import sys
-import IOTools
 import time
 import util_common as util
 from gensim.models import Word2Vec,KeyedVectors,Doc2Vec
