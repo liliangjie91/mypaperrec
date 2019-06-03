@@ -82,8 +82,8 @@ def update_gensim(oldmodelname, indatapath, prefix='',
     model.save(modelpath)  #保存整个模型以及训练过程的数据（其实会生成3个文件model,syn0,syn1 or syn1neg）
     model.wv.save_word2vec_format(wvecname)
     model.docvecs.save_word2vec_format(dvecname)
-    print model
-    print os.path.split(modelpath)[1]
+    # print model
+    # print os.path.split(modelpath)[1]
     # return os.path.splitext(os.path.split(modelpath)[1])[0]
     # KeyedVectors.load_word2vec_format(vecname)
     # print_mostsimi(model, testwl)
@@ -104,13 +104,14 @@ def train_gensim(modelname, indatapath,
                     dm=1-sg, hs=hs, negative=neg, workers=1, dbow_words=trainwv4dbow)  # workers=multiprocessing.cpu_count()
     print("开始训练gensim模型时间 : %s" % doc2vec_start_time)
     print("gensim训练完毕 %.2f secs" % (time.time() - doc2vec_start_time))
+    # model.infer_vector()
     model.save(modelpath)  #保存整个模型以及训练过程的数据(其实会生成3个文件model,syn0,syn1 or syn1neg)
     model.init_sims(replace=True) #句向量归一化并替代原向量
     model.docvecs.save_word2vec_format(dvecname,prefix='') #单纯保存文档向量,文本文件
 
     model.wv.init_sims(replace=True) #词向量归一化并替代原向量
     model.wv.save_word2vec_format(wvecname)  # 单纯保存词向量,文本文件
-    print model
+    # print model
     # KeyedVectors.load_word2vec_format(vecname)
     # print_mostsimi(model, testwl)
     # return modelname
@@ -142,7 +143,7 @@ def print_mostsimi(model, wordlist, annoyindex=None,top=10):
             result = model.most_similar([model.docvecs[w]], topn=top, indexer=annoyindex)
             for e in result:
                 f.write("%s : %.3f\n" % (e[0].encode('utf8'), e[1]))
-        except KeyError, e:
+        except KeyError:
             f.write("word %s is not in the model!\n" %w)
     print("--------------time cost %.3f secs/word " %((time.time()-t)/float(len(wordlist))))
     f.write("\n")
@@ -152,7 +153,7 @@ def test_model(d2vmodel, testwl=testwl, topn=10, evalut=False):
     model = Doc2Vec.load(d2vmodel) if type(d2vmodel) is str else d2vmodel
     print_mostsimi(model, testwl, top=topn)
     if evalut:
-        ina = raw_input("model score 1-9 : ")
+        ina = input("model score 1-9 : ")
         f = open(datapath + r'/model/gensim/modelscore.txt', 'a')
         f.write("size=%d window=%d mincount=%d iter=%d sg=%d hs=%d ns=%d score=%s\n"
                 %(model.vector_size, model.window, model.min_count, model.iter, model.sg, model.hs, model.negative, ina))

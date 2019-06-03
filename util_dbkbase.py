@@ -3,8 +3,7 @@
 # Created by wx on 2016/7/13
 import codecs
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+#reload(sys)
 try:
     import KBase
 except ImportError:
@@ -116,8 +115,8 @@ class DataBase(object):
                     (key, value) = line.strip().split(':')
                     _dict[key] = int(value)
             return _dict
-        except IOError, error:
-            print 'except:', error
+        except IOError as error:
+            print('except:', error)
             exit(-1)
 
     def __database_retrieval_results(self, tpiclient, retrieval_list, mode, *col_num):
@@ -141,7 +140,7 @@ class DataBase(object):
                 # getBlob方法需要设置偏移位，辅助多次截断取数据，当前服务针对一次性取，偏移位为结果集真实长度
                 _, field_name_swap = tpiclient.getBLob(col_num[0][i], 0, col_num_len[0])
                 if field_name_swap:
-                    field_name_swap = unicode(field_name_swap.decode('gb18030', 'replace'))
+                    field_name_swap = field_name_swap.decode('gb18030', 'replace')
             # 当数据<=32kb时，采用取小数据接口，返回数据类型为unicode
             else:
                 # col_num_len = tpiclient.getColDataLen(col_num[0][i])
@@ -172,10 +171,10 @@ class DataBase(object):
             if self._dict.has_key(field):
                 return self._dict[field]
             else:
-                print 'FATAL ERROR: THE TABLE HAS NO %s FIELD!' % field
+                print('FATAL ERROR: THE TABLE HAS NO %s FIELD!' % field)
                 exit(-1)
-        except AssertionError, e:
-            print "%s:%s" % (e.__class__.__name__, e)
+        except AssertionError as e:
+            print("%s:%s" % (e.__class__.__name__, e))
 
     def get_field_position(self, table_name, tpiclient, str_):
         """
@@ -199,7 +198,7 @@ class DataBase(object):
                     raise NoIndexFiledFoundError
             return check_list
         except:
-            print "FATAL ERROR: THERE IS NO INDEX FILED!"
+            print("FATAL ERROR: THERE IS NO INDEX FILED!")
             raise NoIndexFiledFoundError
 
     def __check_sql_old(self, sql):
@@ -239,7 +238,7 @@ class DataBase(object):
                     col_list.append(col_num)
                 return sql, col_list
         else:
-            print 'FATAL ERROR: sql is None!'
+            print('FATAL ERROR: sql is None!')
 
     def __check_sql(self, sql):
         """
@@ -254,7 +253,7 @@ class DataBase(object):
             new_sql = u'select * ' + sql[end:]
             return new_sql
         else:
-            print 'FATAL ERROR: sql is None!'
+            print('FATAL ERROR: sql is None!')
             exit(-1)
 
     def __check_field(self, sql, tpiclient):
@@ -282,7 +281,7 @@ class DataBase(object):
                 col_list = self.get_field_position(table_name, tpiclient, str_)
                 return col_list
         else:
-            print 'FATAL ERROR: sql is None!'
+            print('FATAL ERROR: sql is None!')
 
     def database_handle(self, conn=None, sql=u"select * from CJFDTOTAL where SMARTS = '糖尿病' order by FFD", mode='once', top=None):
         """
@@ -358,9 +357,9 @@ class DataBase(object):
                     cur.close()
                     conn.close()
                 return []
-        except SystemError, e:
-            print 'except:', e
-            print 'FATAL ERROR: KBASEServer is not connected, please check host!!'
+        except SystemError as e:
+            print('except:', e)
+            print('FATAL ERROR: KBASEServer is not connected, please check host!!')
             exit(-1)
 
     def datbase_cite_count(self, sql=u"select count(*) from REFTOTAL where 参考文献 = 'QCSY201124297'"):
@@ -388,7 +387,7 @@ class DataBase(object):
                     conn.close()
                     return record_count
             except SystemError:
-                print 'view is not exit, please check ~~'
+                print('view is not exit, please check ~~')
 
     def choice_new(self, data):
         """
@@ -430,7 +429,7 @@ class PooledKBase(object):
         :param host: kbase服务器ip地址
         :type host: string or sequence of string
         """
-        from Queue import Queue
+        from queue import Queue
         if max_connections_cnt > 10000:  # KBase注册后允许链接数最大值=10000，超过后重新赋值
             max_connections_cnt = 9999
         self._maxsize = max_connections_cnt
@@ -440,14 +439,14 @@ class PooledKBase(object):
         try:
             self.conn = self.create_connection_pool(host)
             if mode == 'cur':
-                for _ in xrange(max_connections_cnt):
+                for _ in range(max_connections_cnt):
                     self.fill_connection(self.conn, mode='cur')
             elif mode == 'tpi':
-                for _ in xrange(max_connections_cnt):
+                for _ in range(max_connections_cnt):
                     self.fill_connection(self.conn)
             else:
                 raise NoRelativeMethodError()
-        except Exception, e:
+        except Exception as e:
             raise e
 
     def fill_connection(self, connection, mode='tpi'):
@@ -470,7 +469,7 @@ class PooledKBase(object):
                 self._pool.put(combine)
             else:
                 exit(-1)
-        except Exception, e:
+        except Exception as e:
             raise "fillConnection error:" + str(e)
 
     def cursor_execute_ksql(self, sql, thread_cur, mode='all'):
@@ -536,7 +535,7 @@ class PooledKBase(object):
         try:
             if not self._pool.empty():
                 return self._pool.get()
-        except Exception, e:
+        except Exception as e:
             raise "getConnection error:" + str(e)
 
     def close_connection(self):
@@ -618,7 +617,7 @@ class PooledKBase(object):
 if __name__ == "__main__":
 
     """for kbase test"""
-    import uniout, time
+    # import uniout, time
 
     # """测试ksql语句"""
     # ksql = u'select * from SYS_AUTHOR_INSTITUTION_NAME where CODE=00000014 09540005'
@@ -629,28 +628,28 @@ if __name__ == "__main__":
     # ksql4 = u'select 被引来源代码 from REFSTATTOTAL where 被引作者代码=00000014'
     # ksql5 = u'select 年,作者代码 from CJFDTOTAL where 作者代码=22644365'
     # ksql6 = u'select 出版日期,机构 from CJFDTOTAL where 文件名 =XTYD201105044'
-    ksql7 = u'select 篇名,中文关键词,年 from CJFDTOTAL WHERE 文件名=SCXH200806014'
-    ksql8 = u'select 篇名,作者 from CJFDTOTAL where 主题 like "多模多馈" order by 出版日期'
+    # ksql7 = u'select 篇名,中文关键词,年 from CJFDTOTAL WHERE 文件名=SCXH200806014'
+    # ksql8 = u'select 篇名,作者 from CJFDTOTAL where 主题 like "多模多馈" order by 出版日期'
     # ksql9 = u'select count(*) from CJFDTOTAL where smarts="信息化"'
     # ksql9_ = u'select COUNT(*) from CJFDTOTAL where smarts="安防"'
     # ksqlll = u"SELECT TOP 3000 篇名,关键词,文件名 FROM CJFD2006,CJFD2005 WHERE (主题 %='虚拟实现技术 虚拟软件' OR 题名 %='虚拟实现技术 虚拟软件') AND 出版日期>='2002-09-25' AND 出版日期<'2006-09-25' ORDER BY (ffd,'rank') DESC with set=locked"
-    ksl = u"SELECT count(*) FROM CJFDTOTAL WHERE (主题 %='虚拟现实' OR 题名 %='虚拟现实') AND 出版日期 between('2000-08-15', '2013-08-14') ORDER BY (ffd, 'rank') DESC with set=locked"
-    ksql = u'select 2012_6_FN, 2012_6_HDN from SYS_AUTHOR_FN_HDN where 作者代码=17753280'
-    kkk = u'SELECT 全文,中文摘要,文件名,篇名 FROM CJFDTOTAL WHERE (主题 %="矿物——光谱" OR 题名 %="矿物——光谱") AND 出版日期 BETWEEN ("1980-08-15", "2013-08-14") ORDER BY (ffd,"rank") DESC with set=locked'
-    sss = u'select 篇名,中文关键词,出版日期,全文,中文摘要 from CJFDTOTAL WHERE 文件名=BJSY200904003'
+    # ksl = u"SELECT count(*) FROM CJFDTOTAL WHERE (主题 %='虚拟现实' OR 题名 %='虚拟现实') AND 出版日期 between('2000-08-15', '2013-08-14') ORDER BY (ffd, 'rank') DESC with set=locked"
+    # ksql = u'select 2012_6_FN, 2012_6_HDN from SYS_AUTHOR_FN_HDN where 作者代码=17753280'
+    # kkk = u'SELECT 全文,中文摘要,文件名,篇名 FROM CJFDTOTAL WHERE (主题 %="矿物——光谱" OR 题名 %="矿物——光谱") AND 出版日期 BETWEEN ("1980-08-15", "2013-08-14") ORDER BY (ffd,"rank") DESC with set=locked'
+    sss = u'select 篇名,中文关键词,出版日期 from CJFDTOTAL WHERE 文件名=BJSY200904003'
     """利用连接池操作的cur模式检索数据库"""
     pk = PooledKBase(max_connections_cnt=50, mode='cur')
     thread_cur = pk.get_connection()
     ret = pk.cursor_execute_ksql(sss, thread_cur, mode='all')
-    print ret
+    print(ret)
     pk.close_connection()
 
     """利用连接池操作的tpi模式检索数据库"""
-    pk = PooledKBase(max_connections_cnt=50, mode='tpi')
-    thread_cur = pk.get_connection()
-    ret = pk.tpiclient_execute_sql(sss, thread_cur, mode='batch', top=3000)
-    print ret
-    pk.close_connection()
+    # pk = PooledKBase(max_connections_cnt=50, mode='tpi')
+    # thread_cur = pk.get_connection()
+    # ret = pk.tpiclient_execute_sql(sss, thread_cur, mode='batch', top=3000)
+    # print(ret)
+    # pk.close_connection()
 
     # """不利用连接池tpi模式检索数据库"""
     # db = DataBase()

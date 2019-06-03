@@ -138,7 +138,7 @@ def filter_fns(inpath,outpath):
         res.append(fn.lower())
     a= list(set(res))
     util.list2txt(a,outpath)
-    print len(a)
+    print(len(a))
     return a
 
 def mergefns(path1,path2,respath):
