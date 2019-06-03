@@ -118,7 +118,7 @@ def seg4file_book(infile, respath):
         else:
             raise Exception("Word Seg Res is None, Please Check Your Input File!!!")
 
-def seg4file_1line1text(infile, respath, resprefix='',to1line=False, hastitle=False, spliter=None):
+def seg4file_1line1text(infile, resprefix='',to1line=False, hastitle=False, spliter=None):
     '''
     对单个文件分词，涉及到分句，
     默认输入的一行就是一段完整的文本，例如全文or摘要(与小说不同，小说是整个文件为全文)
@@ -127,8 +127,9 @@ def seg4file_1line1text(infile, respath, resprefix='',to1line=False, hastitle=Fa
     2(default):一行输入多行输出，即一段文本先分句变成多行，每行句子再分词(to1line=False, hastitle=False)
     3:输入文本第一列标题，后面是text，text分成一行(类似1),输出类似 title [text分词](to1line=True, hastitle=True)
     4:输入文本第一列标题，后面是text，text分成多行(类似2),而输出每行都要加上标题 (to1line=False, hastitle=True)
+    结果文件存放在输入文件目录下segres文件夹内
+    分词速度：单核8.5M/min(XEON) 
     :param infile: 
-    :param respath: 
     :return: 
     '''
     alllines=[]
@@ -164,8 +165,11 @@ def seg4file_1line1text(infile, respath, resprefix='',to1line=False, hastitle=Fa
     logger.info(" --------   %.2f MB/sec --------    %.2fMB/min" % (
         float(fsize) / float(timecha), float(fsize) * 60 / float(timecha)))
     if alllines:
+        segresfolder=os.path.join(os.path.split(infile)[0],'segres')
         filename = os.path.splitext(os.path.split(infile)[1])[0]
-        util.list2txt(alllines, os.path.join(respath, filename+resprefix+'.txt'))
+        if not os.path.exists(segresfolder):
+            os.mkdir(segresfolder)
+        util.list2txt(alllines, os.path.join(segresfolder, filename+resprefix+'.txt'))
     else:
         raise Exception("Word Seg Res is None, Please Check Your Input File!!!")
 
@@ -219,9 +223,9 @@ def parallel_running(path):
     :rtype: list
     """
     from multiprocessing import Pool
-    infiles = util.getfileinfolder(path, prefix='sub_fn18_5w_summery')
+    infiles = util.getfileinfolder(path, prefix='fn_summery1811_spli')
     logger.info("input folder is %s , get %d files in this folder" %(path,len(infiles)))
-    num_cpus = 15   # 直接利用multiprocessing.cpu_count()
+    num_cpus = 20   # 直接利用multiprocessing.cpu_count()
     pool = Pool(num_cpus)
     pool.map(wrap, infiles)
     pool.close()
@@ -235,20 +239,19 @@ def wrap(inpath):
     :return: 以元组形式返回结果集
     :rtype: tuple
     """
-    respath = util_path.path_dataseg + '/sumery_highq5w'
     # seg4file(rec_path,segdatapath)
     # seg4file_book(rec_path, segdatapath)
-    seg4file_1line1text(inpath, respath, resprefix='_l1t1',to1line=True,hastitle=True)
+    seg4file_1line1text(inpath, resprefix='_l1t1',to1line=True,hastitle=True)
     # return amount_and_dict
 
 if __name__ == '__main__':
     basepath=r'./data'
-    rawdatapath=basepath+r'/data_raw/jinyongquanji'
-    segdatapath=basepath+r'/data_seg'
+    # rawdatapath=basepath+r'/data_raw/jinyongquanji'
+    segdatapath=basepath+r'/data_seg/log201811/summery4seg'
     # seg4file(rawdatapath,segdatapath)
     # seg4file_book(tlbbpath, segdatapathtmp)
     # seg4file_1line1text(Path.path_datahighq5w+'/fn18_5w_summery.txt',
     #                     Path.path_dataseg + '/sumery_highq5w',
     #                     resprefix='_1l1t',to1line=True,hastitle=True)
-    parallel_running(util_path.path_datahighq5w + '/splitf/')
+    parallel_running(segdatapath)
     # single_running(rawdatapath,segdatapath)

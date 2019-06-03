@@ -3,7 +3,8 @@
 # Created by lljzhiwang on 2018/12/6
 
 import psutil
-import time,util_path,sys,os,codecs,logging
+import time,sys,os,codecs,logging
+import util_path as path
 import util_common as util
 from gensim.models.doc2vec import Doc2Vec,TaggedDocument
 
@@ -81,30 +82,36 @@ def update_gensim(oldmodelname, indatapath, prefix='',
     model.save(modelpath)  #保存整个模型以及训练过程的数据（其实会生成3个文件model,syn0,syn1 or syn1neg）
     model.wv.save_word2vec_format(wvecname)
     model.docvecs.save_word2vec_format(dvecname)
-    print model
-    print os.path.split(modelpath)[1]
+    # print model
+    # print os.path.split(modelpath)[1]
     # return os.path.splitext(os.path.split(modelpath)[1])[0]
     # KeyedVectors.load_word2vec_format(vecname)
     # print_mostsimi(model, testwl)
 
 def train_gensim(modelname, indatapath,
                  size=200, window=5, minc=2, iter=5, sg=0, hs=0, neg=5, trainwv4dbow=1,annoy=False):
-    modelfolder= datapath + r'/model/%s' % modelname
+    modelfolder= path.path_dataroot + r'/model/%s' % modelname
     if not os.path.exists(modelfolder):
         os.mkdir(modelfolder)
-    modelpath,wvecname,dvecname="%s/%s.model" %(modelfolder,modelname),"%s/%s.wv" % (modelfolder, modelname),"%s/%s.dv" % (modelfolder, modelname)
+    modelpath,wvecname,dvecname="%s/%s.model" %(modelfolder,modelname),\
+                                "%s/%s.normwv" % (modelfolder, modelname),\
+                                "%s/%s.normdv" % (modelfolder, modelname)
     if os.path.exists(modelpath):
         logger.info("model %s has already exists!!!")
         return
-    word2vec_start_time = time.time()
-    print("开始训练gensim模型:当前时间 : %s" %time.asctime(time.localtime(time.time())))
+    doc2vec_start_time = time.time()
     model = Doc2Vec(MyDocuments(indatapath,start=1), size=size, iter=iter, window=window, min_count=minc,
                     dm=1-sg, hs=hs, negative=neg, workers=1, dbow_words=trainwv4dbow)  # workers=multiprocessing.cpu_count()
-    print("gensim训练完毕 %.2f secs" % (time.time() - word2vec_start_time))
-    model.save(modelpath)  #保存整个模型以及训练过程的数据（其实会生成3个文件model,syn0,syn1 or syn1neg）
-    model.wv.save_word2vec_format(wvecname) #单纯保存词向量,文本文件
-    model.docvecs.save_word2vec_format(dvecname) #单纯保存文档向量,文本文件
-    print model
+    print("开始训练gensim模型时间 : %s" % doc2vec_start_time)
+    print("gensim训练完毕 %.2f secs" % (time.time() - doc2vec_start_time))
+    # model.infer_vector()
+    model.save(modelpath)  #保存整个模型以及训练过程的数据(其实会生成3个文件model,syn0,syn1 or syn1neg)
+    model.init_sims(replace=True) #句向量归一化并替代原向量
+    model.docvecs.save_word2vec_format(dvecname,prefix='') #单纯保存文档向量,文本文件
+
+    model.wv.init_sims(replace=True) #词向量归一化并替代原向量
+    model.wv.save_word2vec_format(wvecname)  # 单纯保存词向量,文本文件
+    # print model
     # KeyedVectors.load_word2vec_format(vecname)
     # print_mostsimi(model, testwl)
     # return modelname
@@ -136,7 +143,7 @@ def print_mostsimi(model, wordlist, annoyindex=None,top=10):
             result = model.most_similar([model.docvecs[w]], topn=top, indexer=annoyindex)
             for e in result:
                 f.write("%s : %.3f\n" % (e[0].encode('utf8'), e[1]))
-        except KeyError, e:
+        except KeyError:
             f.write("word %s is not in the model!\n" %w)
     print("--------------time cost %.3f secs/word " %((time.time()-t)/float(len(wordlist))))
     f.write("\n")
@@ -146,7 +153,7 @@ def test_model(d2vmodel, testwl=testwl, topn=10, evalut=False):
     model = Doc2Vec.load(d2vmodel) if type(d2vmodel) is str else d2vmodel
     print_mostsimi(model, testwl, top=topn)
     if evalut:
-        ina = raw_input("model score 1-9 : ")
+        ina = input("model score 1-9 : ")
         f = open(datapath + r'/model/gensim/modelscore.txt', 'a')
         f.write("size=%d window=%d mincount=%d iter=%d sg=%d hs=%d ns=%d score=%s\n"
                 %(model.vector_size, model.window, model.min_count, model.iter, model.sg, model.hs, model.negative, ina))
@@ -180,7 +187,7 @@ def run_train(mnameprefix='model',oldmodelname='',justgetname=False):
     #        dim,win,min,itr,sg,hs,neg,traindbowwv
     argls = [[300, 5, 3, 30, 0, 0, 10, 1]]
     # inputdocs = datapath + r'/data_seg/sumery_highq5w/old'
-    inputdocs = util_path.path_datahighq5w + r'/log18_highq_5w_posi.txt'
+    inputdocs = path.path_datahighq5w + r'/log18_highq_5w_posi.txt'
     mnames=[]
     for argl in argls:
         modelname = run_single_train(argl,inputdocs,oldmodelname=oldmodelname,mnameprefix=mnameprefix ,justgetname=justgetname)
@@ -192,7 +199,7 @@ if __name__ == '__main__':
     names=run_train(mnameprefix='udownhighq5wposi',oldmodelname=oldmodelname,justgetname=True)
     for mname in names:
         if oldmodelname:
-            modelpath = "%s/%s/%s.model" % (util_path.path_model, oldmodelname, mname)
+            modelpath = "%s/%s/%s.model" % (path.path_model, oldmodelname, mname)
         else:
-            modelpath = "%s/%s/%s.model" % (util_path.path_model, mname, mname)
+            modelpath = "%s/%s/%s.model" % (path.path_model, mname, mname)
         test_model(modelpath)
