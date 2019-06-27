@@ -25,4 +25,6 @@ kbase_dict_path = cf.get("dict", "kbase_dict_path")
 idf_dict_path = cf.get("dict", "idf_path")
 jieba_dict_path = cf.get("dict", "jieba_dict_path")
 
+logpath='./logs/'
+
 
