@@ -7,37 +7,38 @@ import util_common as util
 import numpy as np
 import os,sys,util_path,time
 
+from Logginger import init_logger
+logger=init_logger('ml_prepare',logging_path=util_path.logpath)
 
-def get_samplevec_gensimmodel(vecpath1, vecpath2, samplefile):
-    data=[]
-    label=[]
-    print('loading vecfile : %s' % vecpath1)
+def get_samplevec_gensimmodel(vecpath1, vecpath2, samplefile, prefix, respath='./', stopcnt=100, progress_per=10000):
+    #通过样本文件获取对应的向量表示 uid+fn==> [uvec+fnvec]
+    data,labels,realexamp=[],[],[]
+    logger.info('loading vecfile : %s' % vecpath1)
     # muser=Doc2Vec.load(usermodel)
     v_user = load_vec(vecpath1)
-    print('loading vecfile : %s' % vecpath2)
+    logger.info('loading vecfile : %s' % vecpath2)
     v_file = load_vec(vecpath2)
-    sample00=util.load2list(samplefile)
-    cnt=0
-    for l in sample00:
-        if cnt%10000==0:
-            print(cnt)
-        cnt+=1
-        if cnt==1000:
+    samples=util.load2list(samplefile)
+    for cnt,exam in enumerate(samples):
+        if cnt%progress_per==0:
+            print("getting example vecs : %d" %cnt)
+        if stopcnt and stopcnt==cnt:
             break
-        l=l.strip().split()
-        label0=l[1]
-        uid='*dt_' + l[0].split("+")[0]
-        fn='*dt_' + l[0].split("+")[1]
+        exam=exam.strip().split()
+        label0=exam[1]
+        uid='*dt_' + exam[0].split("+")[0]
+        fn='*dt_' + exam[0].split("+")[1]
         if uid in v_user and fn in v_file:
             uvec=list(v_user[uid])
             fvec=list(v_file[fn])
-            sampvec=uvec+fvec
+            sampvec=uvec+fvec #拼接
+            realexamp.append(exam[0])
             data.append(sampvec)
-            label.append(label0)
+            labels.append(label0)
     del v_file
     del v_user
-    np.savetxt('./test.txt',np.array(data))
-    # util.list2txt(label,'./lable.txt')
+    np.savetxt('%s/exampvecs_%s.txt' %(respath,prefix),np.array(data))
+    util.list2txt(realexamp,'%s/realexamples_%s.txt' %(respath,prefix))
 
 def load_vec(vecfilepath,norm=True):
     vect=keyedvectors.Word2VecKeyedVectors.load_word2vec_format(vecfilepath)
@@ -122,5 +123,7 @@ def get_w_v_bycode(vecfilepath,dic_code_kws,respath):
 if __name__ == '__main__':
     get_samplevec_gensimmodel(util_path.path_model + '/d2v_udownhighq5wposi_d300w5minc3iter30_dmns/d2v_udownhighq5wposi_d300w5minc3iter30_dmns.dv',
                               util_path.path_model + '/d2v_highq5w_l1t1_d300w5minc3iter30_dmns/d2v_highq5w_l1t1_d300w5minc3iter30_dmns.dv',
-                              util_path.path_datahighq5w + '/sample_highq5w_neg.txt')
+                              util_path.path_datahighq5w + '/sample_highq5w_posi.txt',prefix='posi',
+                              respath=util_path.path_datahighq5w,
+                              stopcnt=0)
 
