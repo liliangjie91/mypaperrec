@@ -55,6 +55,7 @@ def nan2bivalue(dataf, columename, coverold=False):
         data.to_csv(dataf)
     return data
 
+
 def nan_remove(dataf,nan_rate=0.5):
     #对于部分nan值过多的列，可以选择剔除
     data = pd.read_csv(dataf) if isinstance(dataf, str) else dataf
@@ -66,6 +67,8 @@ def nan_remove(dataf,nan_rate=0.5):
             good_colum.append(i)
     good_data=data.iloc[:,good_colum]
     return good_data
+
+
 
 if __name__ == '__main__':
     pass
