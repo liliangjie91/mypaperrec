@@ -11,7 +11,7 @@ import sys
 from tc_conversion.langconv import *
 from tc_conversion.full_half_conversion import *
 import time
-import util_path
+import util_path as path
 import util_common as util
 
 bianma='utf8'
@@ -19,10 +19,8 @@ basepath=r'./data'
 # bianma='gb18030'
 ss = util_segment.SentenceSegmentation()
 ws = util_segment.WordSegmentation()
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
-logging.root.setLevel(level=logging.INFO)
-logger.info("running %s" % ' '.join(sys.argv))
+from Logginger import init_logger
+logger=init_logger('EmbSeg',logging_path=path.logpath)
 
 def segword4oneline(line, minwc=3, minwlen=0, sseg=False, convert=False):
     '''

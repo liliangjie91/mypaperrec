@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by lljzhiwang on 2018/11/23
-import os,json,time,sys,util_path
+import os,json,time,sys
+import util_path as path
 import util_common as util
 import logging
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
-logging.root.setLevel(level=logging.INFO)
-logger.info("running %s" % ' '.join(sys.argv))
+from Logginger import init_logger
+logger=init_logger('Preprocess',logging_path=path.logpath)
 
 datapath='./data/data_raw'
 goodpath='./data/good'

@@ -5,10 +5,11 @@ from gensim.models.doc2vec import Doc2Vec
 from gensim.models import keyedvectors
 import util_common as util
 import numpy as np
-import os,sys,util_path,time
+import os,sys,pickle
+import util_path as path
 
 from Logginger import init_logger
-logger=init_logger('ml_prepare',logging_path=util_path.logpath)
+logger=init_logger('MLPrepare',logging_path=path.logpath)
 
 def get_samplevec_gensimmodel(vecpath1, vecpath2, samplefile, prefix, respath='./', stopcnt=100, progress_per=10000):
     #通过样本文件获取对应的向量表示 uid+fn==> [uvec+fnvec]
@@ -39,6 +40,26 @@ def get_samplevec_gensimmodel(vecpath1, vecpath2, samplefile, prefix, respath='.
     del v_user
     np.savetxt('%s/exampvecs_%s.txt' %(respath,prefix),np.array(data))
     util.list2txt(realexamp,'%s/realexamples_%s.txt' %(respath,prefix))
+
+def get_vec_gensimmodel(vecpath1,samplefile, prefix, respath='./', stopcnt=100, progress_per=10000):
+    #通过样本文件获取对应的向量表示 uid+fn==> [uvec+fnvec]
+    resdata={}
+    logger.info('loading vecfile : %s' % vecpath1)
+    v_user = load_vec(vecpath1)
+    samples=util.load2list(samplefile)
+    for cnt,exam in enumerate(samples):
+        if cnt%progress_per==0:
+            print("getting example vecs : %d" %cnt)
+        # if stopcnt and stopcnt==cnt:
+        #     break
+        examid=exam.strip()
+        uid='*dt_' + examid
+        if uid in v_user:
+            uvec=list(v_user[uid])
+            resdata[examid]=uvec
+    with open(respath+'/'+prefix+'.pkl','wb') as f:
+        pickle.dump(resdata,f)
+
 
 def load_vec(vecfilepath,norm=True):
     vect=keyedvectors.Word2VecKeyedVectors.load_word2vec_format(vecfilepath)
@@ -121,9 +142,11 @@ def get_w_v_bycode(vecfilepath,dic_code_kws,respath):
 
 
 if __name__ == '__main__':
-    get_samplevec_gensimmodel(util_path.path_model + '/d2v_udownhighq5wposi_d300w5minc3iter30_dmns/d2v_udownhighq5wposi_d300w5minc3iter30_dmns.dv',
-                              util_path.path_model + '/d2v_highq5w_l1t1_d300w5minc3iter30_dmns/d2v_highq5w_l1t1_d300w5minc3iter30_dmns.dv',
-                              util_path.path_datahighq5w + '/sample_highq5w_posi.txt',prefix='posi',
-                              respath=util_path.path_datahighq5w,
-                              stopcnt=0)
+    uservecmodel=path.path_model + '/d2v_udownhighq5wposi_d300w5minc3iter30_dmns/d2v_udownhighq5wposi_d300w5minc3iter30_dmns.dv'
+    fnvecmodel=path.path_model + '/d2v_highq5w_l1t1_d300w5minc3iter30_dmns/d2v_highq5w_l1t1_d300w5minc3iter30_dmns.dv'
+    userlist=path.path_datahighq5w+'/realexam_users.txt'
+    fnslist=path.path_datahighq5w+'/realexam_fns.txt'
+    get_vec_gensimmodel(uservecmodel,userlist,prefix='realvec_user',respath=path.path_datahighq5w)
+    get_vec_gensimmodel(fnvecmodel, fnslist, prefix='realvec_fn', respath=path.path_datahighq5w)
+
 

@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 # Created by liliangjie on 2018/11/10 
 # Email llj : laiangnaduo91@gmail.com
-import codecs
+import codecs,pickle
 import os,json,re
 import logging
 import numpy as np
+import util_path as path
 
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
-logging.root.setLevel(level=logging.INFO)
+from Logginger import init_logger
+logger=init_logger('UtilCom',logging_path=path.logpath)
 bianma='utf8'
 
 '''
@@ -299,6 +299,21 @@ def extend2bigram(l, centerword=None, start=0, justbigram=False, addstartelem=Fa
         return [l[0]] + bigramw if addstartelem else bigramw
     else:
         return l+[centerword]+bigramw if centerword else l+bigramw
+
+# 模型序列化与反序列化
+def pickle_dump(obj,respath):
+    #序列化
+    logger.info('pickling obj to %s' %respath)
+    with open(respath,'wb') as f:
+        pickle.dump(obj,f)
+
+
+def pickle_load(filepath):
+    #反序列化
+    logger.info('loadding pickle file : %s' %filepath)
+    with open(filepath, 'rb') as f:
+        model = pickle.load(f)
+    return model
 
 if __name__ == '__main__':
     # json2txt('./data/cluster/w2vkw1811_sgns_code/data_wv/A001/dic_center2words_A001_21_00107.json', 'tmp.txt')

@@ -9,6 +9,3 @@ from sklearn.linear_model import Perceptron
 from sklearn.metrics import roc_curve,roc_auc_score
 
 
-def sample_prcoess():
-    #样本处理，特征处理
-    pass

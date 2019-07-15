@@ -16,10 +16,8 @@ from gensim.similarities.index import AnnoyIndexer
 BIANMA= 'utf8'
 datapath= r'./data'
 # bianma='gb18030'
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
-logging.root.setLevel(level=logging.INFO)
-logger.info("running %s" % ' '.join(sys.argv))
+from Logginger import init_logger
+logger=init_logger('EmbW2V',logging_path=path.logpath)
 testwl=[u'中国',u'一带一路',u'广东省',u'计算机',u'经济',u'微信']
 
 class MySentences(object):

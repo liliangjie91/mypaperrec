@@ -11,10 +11,8 @@ from gensim.models.doc2vec import Doc2Vec,TaggedDocument
 BIANMA= 'utf8'
 datapath= r'./data'
 # bianma='gb18030'
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
-logging.root.setLevel(level=logging.INFO)
-logger.info("running %s" % ' '.join(sys.argv))
+from Logginger import init_logger
+logger=init_logger('EmbD2V',logging_path=path.logpath)
 testwl=['zgjq200914010','1011143537.nh','DYPJ200924005','2010261634.nh','1014310786.nh','1012347178.nh',
         '1012258129.nh','ddyi201218094','fxsy201508029']
 

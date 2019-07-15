@@ -12,19 +12,8 @@ import ml_prepare as mlpre
 import util_dbkbase as kbase
 import logging
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                    datefmt='%d %b %y %H:%M:%S',
-                    filename='./logs/all.log',
-                    filemode='a')
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler("./logs/cluster.log")
-ch = logging.StreamHandler()
-formatter=logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
-fh.setFormatter(formatter)
-ch.setFormatter(formatter)
-logger.addHandler(fh)
+from Logginger import init_logger
+logger=init_logger('MLClus',logging_path=path.logpath)
 # logger.addHandler(ch)
 
 def vec_cluster(vecs,respath,true_k=None,subfix=''):
