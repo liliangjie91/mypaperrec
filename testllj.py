@@ -2,7 +2,7 @@
 __author__ = 'lljzhiwang'
 import  time
 import threading
-from Queue import Queue
+# from Queue import Queue
 import util_common as util
 
 # kws = [u"石油" , u"计算机" , u"网络" , u"楼房" , u"鼠标" , u"咖啡"]
@@ -47,8 +47,31 @@ def printurllist():
                 # f.write("http://my.cnki.net/RCDService/api/MyPapers/downloadHistory?id=%s\n" % w.encode('utf8'))
 
 #
+def qsort(l,start,end):
+    if start>=end:
+        return
+    ll,lr=start,end
+    tmpv=l[start]
+    while ll<lr:
+        while ll<lr and l[lr]>=tmpv:
+            lr-=1
+        if ll==lr:
+            break
+        else:
+            l[ll],l[lr]=l[lr],l[ll]
 
+        while ll<lr and l[ll]<=tmpv:
+            ll+=1
+        if ll==lr:
+            break
+        else:
+            l[ll], l[lr] = l[lr], l[ll]
+    qsort(l,start,ll-1)
+    qsort(l,lr+1,end)
 
 if __name__ == '__main__':
     # print rev2('abcdef',2)
-    printurllist()
+    l=[5,4,3,6,8,2]
+    qsort(l,0,len(l))
+    print(l)
+

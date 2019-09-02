@@ -10,7 +10,7 @@ pd.set_option('display.width',None)
 pd.set_option('display.max_colwidth',150)
 pd.set_option('display.max_columns', 200)
 
-datapath = r'C:/Users/lx/Desktop/Machine Learning/myPaperRrec/myPaperRrec/data'
+
 useridcolumn=[]
 _CSV_COLUMNS =[]
 _CSV_COLUMN_DEFAULTS=[]
@@ -38,7 +38,7 @@ _CSV_COLUMN_DEFAULTS.append([0])
 _CSV_COLUMNS.append("fe9")
 _CSV_COLUMN_DEFAULTS.append([0])
 
-
+datapath = r'./data'
 modelfolder = datapath + r'/model/testlx'
 sample_pos=datapath+r'/highq_5w/sample_highq5w_posi.txt'
 sample_neg=datapath+r'/highq_5w/sample_highq5w_neg.txt'
